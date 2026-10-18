@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}Appointments{% endblock %}{% block content %}
+{% if session.role in ['admin','receptionist'] %}
+<div class="card"><h2>Book Appointment</h2>
+<div class="card ai" style="background:var(--soft)"><b>AI Smart Suggest:</b> choose department + date. The system finds the least busy doctor and the first free slot.
+<div class="grid" style="margin-top:8px"><select id="dept">{% for d in departments %}<option>{{ d }}</option>{% endfor %}</select>
+<input type="date" id="sdate" value="{{ today }}" min="{{ today }}"><button type="button" class="btn" onclick="suggest()">Suggest</button></div><span id="smsg"></span></div>
+<form method="post"><div class="grid">
+<select name="patient_id" required><option value="">Select patient</option>{% for p in patients %}<option value="{{ p.id }}" {{ 'selected' if p.id|string == pid }}>{{ p.name }} ({{ p.uhid }})</option>{% endfor %}</select>
+<select name="doctor_id" id="doc" required><option value="">Select doctor</option>{% for d in doctors %}<option value="{{ d.id }}">{{ d.name }} - {{ d.department }}</option>{% endfor %}</select>
+<input type="date" name="adate" id="adate" value="{{ today }}" min="{{ today }}" required>
+<select name="atime" id="atime">{% for s in slots %}<option>{{ s }}</option>{% endfor %}</select>
+<input data-mic name="reason" placeholder="Reason for visit"></div><button class="btn">Book</button></form></div>{% endif %}
+<div class="card"><h2>Appointments</h2>
+<form style="display:flex;gap:8px;margin-bottom:12px"><input type="date" name="d" value="{{ day }}"><button class="btn">Filter by date</button><a class="btn gray" href="/appointments">Show all</a></form>
+<table><tr><th>Date</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Status</th><th></th></tr>
+{% for a in appts %}<tr><td>{{ a.adate }}</td><td>{{ a.atime }}</td><td><a href="/patients/{{ a.patient_id }}">{{ a.pname }}</a><br><small class="muted">{{ a.uhid }}</small></td><td>{{ a.dname }}<br><small class="muted">{{ a.department }}</small></td><td>{{ a.reason }}</td><td>{{ badge(a.status) }}</td>
+<td>{% if a.status=='Scheduled' %}<form method="post" action="/appointments/{{ a.id }}/Cancelled" style="display:inline"><button class="btn sm red">Cancel</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No appointments.</td></tr>{% endfor %}</table></div>
+<script>
+async function suggest(){
+ const r=await fetch('/api/suggest?department='+encodeURIComponent(dept.value)+'&date='+sdate.value);const d=await r.json();
+ if(d.error){smsg.textContent=d.error;return}
+ doc.value=d.doctor_id;atime.value=d.time;adate.value=sdate.value;smsg.textContent='Suggested: '+d.doctor+' at '+d.time+' (form filled below)';
+}</script>
+{% endblock %}

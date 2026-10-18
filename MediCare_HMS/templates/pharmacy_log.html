@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block heading %}Pharmacy Stock History{% endblock %}{% block content %}
+<div class="card"><h2>Stock movements</h2>
+<form style="display:flex;gap:8px;margin-bottom:12px"><select name="medicine"><option value="">All medicines</option>{% for m in meds %}<option value="{{ m.id }}" {{ 'selected' if mid==m.id }}>{{ m.name }}</option>{% endfor %}</select><button class="btn">Show</button><a class="btn gray" href="/pharmacy">Back to pharmacy</a></form>
+<table><tr><th>When</th><th>Medicine</th><th>Change</th><th>Reason</th><th>By</th></tr>
+{% for r in rows %}<tr><td>{{ r.ts }}</td><td>{{ r.name }}</td><td><b style="color:{{ '#16a34a' if r.change>0 else '#e11d48' }}">{{ '%+d'|format(r.change) }}</b></td><td>{{ r.reason }}</td><td>{{ r.user }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No stock movements recorded yet. New dispenses, sales, restocks and adjustments appear here.</td></tr>{% endfor %}</table></div>
+{% endblock %}

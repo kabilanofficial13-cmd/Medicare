@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block content %}
+<style>
+.lg{position:fixed;inset:0;display:grid;grid-template-columns:1.15fr 1fr;background:var(--bg)}
+.lh{background:linear-gradient(135deg,#312e81,#6d28d9 50%,#0891b2);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:30px;position:relative;overflow:hidden;text-align:center}
+.lh::before,.lh::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.07)}.lh::before{width:420px;height:420px;left:-140px;top:-140px}.lh::after{width:320px;height:320px;right:-100px;bottom:-110px}
+.lh img.h{width:min(440px,80%);position:relative;z-index:1}.lh h1{font-size:34px;margin:6px 0 8px;position:relative}.lh p{max-width:430px;color:#e0e7ff;margin:0 0 16px;position:relative}
+.feat{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;position:relative}.feat span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:6px 13px;border-radius:99px;font-size:13px;backdrop-filter:blur(6px)}
+.lf{display:flex;align-items:center;justify-content:center;padding:24px}.lb{width:100%;max-width:400px}
+.lb .logo{display:flex;align-items:center;gap:12px;margin-bottom:22px}.lb .logo img{width:50px;height:50px;border-radius:14px;box-shadow:0 8px 20px rgba(99,102,241,.4)}
+.lb h2{margin:0;font-size:24px}.roles{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.roles button{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:99px;padding:5px 12px;cursor:pointer;font:inherit;font-size:12px}
+.roles button:hover{background:var(--p1);color:#fff}
+@media(max-width:850px){.lg{grid-template-columns:1fr}.lh{display:none}}
+</style>
+<div class="lg"><div class="lh"><img class="h" src="/static/hero.svg" alt=""><h1>Smart care, powered by AI</h1>
+<p>One connected system for patients, doctors, pharmacy, laboratory, wards and billing.</p>
+<div class="feat"><span>✦ AI triage</span><span>💊 Drug safety checks</span><span>🎤 Voice assistant</span><span>🛏 Live bed status</span></div></div>
+<div class="lf"><div class="lb"><div class="logo"><img src="/static/logo.svg" alt=""><div><h2>MediCare HMS</h2><span class="muted">Sign in to continue</span></div></div>
+{% for m in get_flashed_messages() %}<div class="flash">{{ m }}</div>{% endfor %}
+<form method="post"><p><label>Username</label><input name="username" id="u" required autofocus></p>
+<p><label>Password</label><input name="password" id="p" type="password" required></p>
+<button class="btn" style="width:100%;padding:12px">Login</button></form>
+<p class="muted" style="margin:18px 0 6px;font-size:12px">Quick demo login (click to fill):</p>
+<div class="roles"><button type="button" onclick="f('admin','admin123')">Admin</button><button type="button" onclick="f('reception','recep123')">Receptionist</button>
+<button type="button" onclick="f('doctor','doctor123')">Doctor</button><button type="button" onclick="f('pharmacy','pharma123')">Pharmacist</button><button type="button" onclick="f('lab','lab123')">Lab</button></div></div></div></div>
+<script>function f(a,b){document.getElementById('u').value=a;document.getElementById('p').value=b}</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run MediCare HMS",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/app.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

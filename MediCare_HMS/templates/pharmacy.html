@@ -1,0 +1,51 @@
+{% extends "base.html" %}{% block heading %}Pharmacy{% endblock %}{% block content %}
+<div class="stats">
+<div class="stat"><span>Medicines</span><div>{{ stats.n }}</div></div>
+<div class="stat"><span>Stock value (retail)</span><div>{{ stats.retail|inr }}</div></div>
+<div class="stat"><span>Stock value (cost)</span><div>{{ stats.cost|inr }}</div></div>
+<div class="stat"><span>Low stock</span><div>{{ stats.low|int }}</div></div>
+<div class="stat"><span>Expiring in 60 days</span><div>{{ stats.soon|int }}</div></div>
+<div class="stat"><span>Expired</span><div>{{ stats.expired|int }}</div></div>
+</div>
+
+<div class="card"><h2>Prescriptions waiting to be dispensed</h2>
+<table><tr><th>Date</th><th>Patient</th><th>Medicine</th><th>Dosage</th><th>Qty</th><th>In stock</th><th>Amount</th><th>Safety check</th><th></th></tr>
+{% for r in pending %}<tr><td>{{ r.cdate }}</td><td>{{ r.pname }}<br><small class="muted">{{ r.uhid }}</small></td><td>{{ r.mname }}{% if r.expiry < today %} <span class="badge High">Expired</span>{% endif %}</td><td>{{ r.dosage }} × {{ r.days }}d</td><td>{{ r.qty }}</td>
+<td>{% if r.stock < r.qty %}<span class="badge High">{{ r.stock }}</span>{% else %}{{ r.stock }}{% endif %}</td><td>{{ (r.qty*r.price)|inr }}</td>
+<td>{% for w in r.warns %}<div><span class="badge {{ 'High' if w.level=='HIGH' else 'Mild' }}">{{ w.level }}</span> <small>{{ w.msg }}</small></div>{% else %}<small class="muted">✔ No issues</small>{% endfor %}</td>
+<td><form method="post" action="/pharmacy/dispense/{{ r.id }}"{% if r.high %} onsubmit="return confirm('This medicine has a HIGH safety warning. Dispense only if the doctor has confirmed. Continue?')"{% endif %}>{% if r.high %}<input type="hidden" name="override" value="1"><button class="btn sm red">Dispense anyway</button>{% else %}<button class="btn sm">Dispense</button>{% endif %}</form></td></tr>
+{% else %}<tr><td colspan="9" class="muted">No pending prescriptions.</td></tr>{% endfor %}</table></div>
+
+<div class="two">
+<div class="card"><h2>Counter sale (no prescription)</h2>
+<form method="post" action="/pharmacy/sale"><div class="grid">
+<div><label>Patient</label><select name="patient_id" required><option value="">Select patient…</option>{% for p in patients %}<option value="{{ p.id }}">{{ p.name }} ({{ p.uhid }})</option>{% endfor %}</select></div>
+<div><label>Medicine</label><select name="medicine_id" required><option value="">Select medicine…</option>{% for m in allmeds %}<option value="{{ m.id }}">{{ m.name }} — {{ m.stock }} left · ₹{{ m.price }}</option>{% endfor %}</select></div>
+<div><label>Quantity</label><input name="qty" type="number" min="1" value="1" required></div></div>
+<label style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><input type="checkbox" name="override" value="1" style="width:auto"><span>Override safety warning (allergy)</span></label>
+<button class="btn">Sell &amp; add to bill</button></form></div>
+
+<div class="card"><h2>Add / Restock Medicine</h2><form method="post" action="/pharmacy/add"><div class="grid">
+<div><label>Medicine name (existing name = restock)</label><input name="name" required list="medlist"><datalist id="medlist">{% for m in meds %}<option value="{{ m.name }}">{% endfor %}</datalist></div>
+<div><label>Category</label><input name="category" value="General" list="catlist"><datalist id="catlist">{% for c in cats %}<option value="{{ c }}">{% endfor %}</datalist></div>
+<div><label>Quantity</label><input name="stock" type="number" required></div><div><label>Selling price ₹</label><input name="price" type="number" step="0.01" required></div>
+<div><label>Purchase cost ₹</label><input name="cost" type="number" step="0.01"></div><div><label>Reorder level</label><input name="reorder" type="number" value="20"></div>
+<div><label>Expiry</label><input name="expiry" type="date" required></div><div><label>Batch no.</label><input name="batch_no"></div>
+<div><label>Manufacturer / supplier</label><input name="manufacturer"></div><div><label>Rack / shelf</label><input name="rack"></div></div>
+<button class="btn">Save</button></form></div></div>
+
+<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center"><h2 style="margin:0">Inventory</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm gray" href="/pharmacy/reorder.csv">⬇ Reorder list (CSV)</a><a class="btn sm gray" href="/pharmacy/history">Stock history</a></div></div>
+<form style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><input name="q" value="{{ term }}" placeholder="Search name, category, batch, manufacturer" style="flex:1;min-width:200px">
+<select name="filter" style="max-width:200px">{% for v,l in [('all','All medicines'),('low','Low stock'),('out','Out of stock'),('soon','Expiring in 60 days'),('expired','Expired')] %}<option value="{{ v }}" {{ 'selected' if f==v }}>{{ l }}</option>{% endfor %}</select><button class="btn">Filter</button></form>
+<table><tr><th>Medicine</th><th>Category</th><th>Stock</th><th>Price</th><th>Batch / Rack</th><th>Expiry</th><th>Alert</th><th>Actions</th></tr>
+{% for m in meds %}<tr><td>{{ m.name }}<br><small class="muted">{{ m.manufacturer or '' }}</small></td><td>{{ m.category }}</td><td>{{ m.stock }}</td><td>{{ m.price|inr }}</td><td>{{ m.batch_no or '-' }} / {{ m.rack or '-' }}</td><td>{{ m.expiry }}</td>
+<td>{% if m.stock <= 0 %}<span class="badge High">Out of stock</span> {% elif m.stock <= m.reorder_level %}<span class="badge High">Low stock</span> {% endif %}{% if m.expiry < today %}<span class="badge High">Expired</span>{% elif m.expiry <= soon %}<span class="badge Mild">Expiring soon</span>{% endif %}</td>
+<td><details><summary class="btn sm gray" style="list-style:none;cursor:pointer">Manage</summary>
+<form method="post" action="/pharmacy/{{ m.id }}/adjust" style="margin:8px 0;display:flex;gap:6px;flex-wrap:wrap"><input name="qty" type="number" placeholder="Qty" style="width:80px" required>
+<select name="reason" style="width:auto"><option>Correction</option><option>Returned</option><option>Expired write-off</option><option>Damaged</option><option>Lost</option></select><button class="btn sm">Adjust stock</button></form>
+<form method="post" action="/pharmacy/{{ m.id }}/edit" class="grid" style="min-width:260px"><input name="category" value="{{ m.category }}" placeholder="Category"><input name="price" type="number" step="0.01" value="{{ m.price }}" placeholder="Price"><input name="cost" type="number" step="0.01" value="{{ m.cost or 0 }}" placeholder="Cost">
+<input name="reorder" type="number" value="{{ m.reorder_level }}" placeholder="Reorder level"><input name="expiry" type="date" value="{{ m.expiry }}"><input name="batch_no" value="{{ m.batch_no or '' }}" placeholder="Batch"><input name="manufacturer" value="{{ m.manufacturer or '' }}" placeholder="Manufacturer"><input name="rack" value="{{ m.rack or '' }}" placeholder="Rack"><button class="btn sm">Save details</button></form>
+<a class="btn sm gray" href="/pharmacy/history?medicine={{ m.id }}">History</a></details></td></tr>
+{% else %}<tr><td colspan="8" class="muted">No medicines match.</td></tr>{% endfor %}</table></div>
+{% endblock %}

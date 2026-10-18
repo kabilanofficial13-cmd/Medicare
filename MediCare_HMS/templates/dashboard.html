@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% from "_macros.html" import badge, vbars, icon %}{% block heading %}Dashboard{% endblock %}{% block content %}
+{% set r = session.role %}
+<div class="hero"><div><h2><span id="greet">Welcome</span>, {{ session.name }} 👋</h2>
+<p>Here is what is happening in the hospital today.</p>
+<div class="qa">
+{% if r in ['admin','receptionist'] %}<a class="qbtn" href="/patients">{{ icon('users') }} Register patient</a><a class="qbtn" href="/appointments">{{ icon('calendar') }} Book appointment</a><a class="qbtn" href="/admissions">{{ icon('bed') }} Admit patient</a><a class="qbtn" href="/billing">{{ icon('card') }} Billing</a>{% endif %}
+{% if r in ['admin','doctor'] %}<a class="qbtn" href="/opd">{{ icon('activity') }} OPD queue</a>{% endif %}
+{% if r in ['admin','lab'] %}<a class="qbtn" href="/lab">{{ icon('flask') }} Lab queue</a>{% endif %}
+{% if r in ['admin','pharmacist'] %}<a class="qbtn" href="/pharmacy">{{ icon('pill') }} Pharmacy</a>{% endif %}
+{% if r == 'admin' %}<a class="qbtn" href="/reports">{{ icon('chart') }} Reports</a>{% endif %}
+<a class="qbtn" href="/ai">{{ icon('ai') }} Ask AI</a></div></div>
+<img src="/static/hero.svg" alt=""></div>
+<div class="kpis">
+<div class="kpi k1"><div class="ico">{{ icon('users') }}</div><div><small>Total patients</small><b>{{ stats.patients }}</b></div></div>
+<div class="kpi k2"><div class="ico">{{ icon('calendar') }}</div><div><small>Today's appointments</small><b>{{ stats.today }}</b></div></div>
+<div class="kpi k3"><div class="ico">{{ icon('bed') }}</div><div><small>Admitted (IPD)</small><b>{{ stats.admitted }}</b></div></div>
+<div class="kpi k4"><div class="ico">{{ icon('doctor') }}</div><div><small>Doctors</small><b>{{ stats.doctors }}</b></div></div>
+<div class="kpi k5"><div class="ico">{{ icon('flask') }}</div><div><small>Pending lab tests</small><b>{{ stats.pending_lab }}</b></div></div>
+<div class="kpi k6"><div class="ico">{{ icon('pill') }}</div><div><small>Pending prescriptions</small><b>{{ stats.pending_rx }}</b></div></div>
+<div class="kpi k8"><div class="ico">{{ icon('alert') }}</div><div><small>Low stock items</small><b>{{ stats.low_stock }}</b></div></div>
+{% if r in ['admin','receptionist'] %}
+<div class="kpi k7"><div class="ico">{{ icon('rupee') }}</div><div><small>Today's collection</small><b>{{ stats.today_rev|inr }}</b></div></div>
+<div class="kpi k5"><div class="ico">{{ icon('card') }}</div><div><small>Total revenue</small><b>{{ stats.revenue|inr }}</b></div></div>
+<div class="kpi k4"><div class="ico">{{ icon('alert') }}</div><div><small>Pending dues</small><b>{{ stats.dues|inr }}</b></div></div>{% endif %}
+</div>
+<div class="card ai"><h3>AI Insights</h3>
+{% for lvl, txt in insights %}<div class="ins {{ lvl }}">{{ '🔴' if lvl=='HIGH' else ('🟠' if lvl=='MEDIUM' else '🟢') }} {{ txt }}</div>{% endfor %}</div>
+<div class="two">
+<div class="card"><h3>Appointments - last 7 days</h3>{{ vbars(week) }}</div>
+<div class="card"><h3>Bed occupancy</h3><div class="dwrap"><div class="donut" style="--v:{{ stats.occ_pct }}"><b>{{ stats.occ_pct }}%</b></div>
+<div><p><b>{{ stats.occupied }}</b> beds occupied<br><b>{{ stats.free_beds }}</b> beds free<br><span class="muted">{{ stats.beds }} beds in total</span></p><a class="btn sm" href="/admissions">Manage beds</a></div></div></div>
+</div>
+<div class="card"><h3>Today's appointments</h3><table><tr><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th></tr>
+{% for a in today_appts %}<tr><td>{{ a.atime }}</td><td><a href="/patients/{{ a.patient_id }}">{{ a.pname }}</a></td><td>{{ a.dname }}</td><td>{{ badge(a.status) }}</td></tr>
+{% else %}<tr><td colspan="4" class="muted">No appointments today.</td></tr>{% endfor %}</table></div>
+<script>(function(){var h=new Date().getHours();document.getElementById('greet').textContent=h<12?'Good morning':(h<17?'Good afternoon':'Good evening')})()</script>
+{% endblock %}

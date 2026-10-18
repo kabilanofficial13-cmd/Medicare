@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}Laboratory{% endblock %}{% block content %}
+<div class="card"><h2>Pending tests</h2><table><tr><th>Ordered</th><th>Patient</th><th>Test</th><th>Normal range</th><th>Doctor</th><th>Enter result</th></tr>
+{% for o in pending %}<tr><td>{{ o.ordered_at }}</td><td>{{ o.pname }}<br><small class="muted">{{ o.uhid }}</small></td><td>{{ o.tname }}</td><td>{{ o.low }} - {{ o.high }} {{ o.unit }}</td><td>{{ o.dname }}</td>
+<td><form method="post" action="/lab/{{ o.id }}/result" style="display:flex;gap:6px"><input name="result" type="number" step="any" required style="width:110px"><button class="btn sm">Save</button></form></td></tr>
+{% else %}<tr><td colspan="6" class="muted">No pending tests.</td></tr>{% endfor %}</table></div>
+<div class="card ai"><h2>Recent results (with AI interpretation)</h2><table><tr><th>Patient</th><th>Test</th><th>Result</th><th>Flag</th><th>Interpretation</th></tr>
+{% for o in done %}<tr><td>{{ o.pname }}</td><td>{{ o.tname }}</td><td>{{ o.result }} {{ o.unit }}</td><td>{{ badge(o.flag) }}</td><td>{{ o.note }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No results yet.</td></tr>{% endfor %}</table></div>
+{% endblock %}

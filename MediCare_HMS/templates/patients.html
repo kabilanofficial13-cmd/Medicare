@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block heading %}Patients{% endblock %}{% block content %}
+{% if session.role in ['admin','receptionist'] %}
+<div class="card"><h2>Register New Patient</h2><form method="post"><div class="grid">
+<div><label>Full name</label><input name="name" required></div><div><label>Age</label><input name="age" type="number" min="0" max="120" required></div>
+<div><label>Gender</label><select name="gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+<div><label>Blood group</label><select name="blood_group"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+<div><label>Phone</label><input name="phone" required></div><div><label>Email (for PDF bills)</label><input name="email" type="email" placeholder="patient@example.com"></div><div><label>Emergency contact</label><input name="emergency_contact"></div>
+<div><label>Address</label><input name="address"></div><div><label>Known allergies</label><input name="allergies" placeholder="e.g. Penicillin, NSAIDs (or None)"></div></div>
+<button class="btn">Register Patient</button></form></div>{% endif %}
+<div class="card"><h2>Patient List</h2>
+<form style="display:flex;gap:8px;margin-bottom:12px"><input name="q" value="{{ q }}" placeholder="Search by name, phone or UHID"><button class="btn">Search</button></form>
+<table><tr><th>UHID</th><th>Name</th><th>Age/Gender</th><th>Blood</th><th>Phone</th><th>Allergies</th><th></th></tr>
+{% for p in patients %}<tr><td>{{ p.uhid }}</td><td>{{ p.name }}</td><td>{{ p.age }} / {{ p.gender }}</td><td>{{ p.blood_group }}</td><td>{{ p.phone }}</td><td>{{ p.allergies }}</td>
+<td><a class="btn sm" href="/patients/{{ p.id }}">Open</a>
+{% if session.role=='admin' %}<form method="post" action="/patients/{{ p.id }}/delete" style="display:inline" onsubmit="return confirm('Delete this patient and all records?')"><button class="btn sm red">Delete</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No patients found.</td></tr>{% endfor %}</table></div>
+{% endblock %}

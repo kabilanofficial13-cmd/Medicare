@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}OPD - Doctor's Queue{% endblock %}{% block content %}
+<div class="card"><h2>Patients for {{ d }}</h2>
+<form style="display:flex;gap:8px;margin-bottom:12px"><input type="date" name="d" value="{{ d }}"><button class="btn">Go</button></form>
+<table><tr><th>Time</th><th>Patient</th><th>Age/Gender</th><th>Allergies</th><th>Reason</th><th>Status</th><th></th></tr>
+{% for a in appts %}<tr><td>{{ a.atime }}</td><td><a href="/patients/{{ a.patient_id }}">{{ a.pname }}</a><br><small class="muted">{{ a.uhid }}</small></td><td>{{ a.age }} / {{ a.gender }}</td>
+<td>{% if a.allergies and a.allergies|lower!='none' %}<span class="badge High">{{ a.allergies }}</span>{% else %}-{% endif %}</td><td>{{ a.reason }}</td><td>{{ badge(a.status) }}</td>
+<td>{% if a.status=='Scheduled' %}<a class="btn sm" href="/consult/{{ a.id }}">Start consultation</a>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No appointments for this date.</td></tr>{% endfor %}</table></div>
+{% endblock %}

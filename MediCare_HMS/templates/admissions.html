@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}IPD - Admissions & Beds{% endblock %}{% block content %}
+<div class="stats">{% for w in wards %}<div class="stat"><span>{{ w.name }} (₹{{ w.charge|int }}/day)</span><div>{{ w.free }} / {{ w.total }} <small class="muted" style="font-size:12px">beds free</small></div></div>{% endfor %}</div>
+<div class="card"><h2>Admit Patient</h2><form method="post"><div class="grid">
+<select name="patient_id" required><option value="">Select patient</option>{% for p in patients %}<option value="{{ p.id }}">{{ p.name }} ({{ p.uhid }})</option>{% endfor %}</select>
+<select name="bed_id" required><option value="">Select free bed</option>{% for b in free_beds %}<option value="{{ b.id }}">{{ b.ward }} - {{ b.bed_no }}</option>{% endfor %}</select>
+<select name="doctor_id" required><option value="">Doctor in charge</option>{% for d in doctors %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}</select>
+<input name="reason" placeholder="Reason for admission" required></div><button class="btn">Admit</button></form></div>
+<div class="card"><h2>Currently Admitted</h2><table><tr><th>Patient</th><th>Ward / Bed</th><th>Doctor</th><th>Since</th><th>Reason</th><th>Discharge</th></tr>
+{% for a in active %}<tr><td><a href="/patients/{{ a.patient_id }}">{{ a.pname }}</a><br><small class="muted">{{ a.uhid }}</small></td><td>{{ a.ward }} / {{ a.bed_no }}</td><td>{{ a.dname }}</td><td>{{ a.admit_date }}</td><td>{{ a.reason }}</td>
+<td><form method="post" action="/admissions/{{ a.id }}/discharge" style="display:flex;gap:6px"><input name="summary" placeholder="Discharge summary / advice"><button class="btn sm red">Discharge</button></form></td></tr>
+{% else %}<tr><td colspan="6" class="muted">No admitted patients.</td></tr>{% endfor %}</table></div>
+<div class="card"><h2>Discharge History</h2><table><tr><th>Patient</th><th>Ward</th><th>Admitted</th><th>Discharged</th><th></th></tr>
+{% for a in history %}<tr><td>{{ a.pname }}</td><td>{{ a.ward }} / {{ a.bed_no }}</td><td>{{ a.admit_date }}</td><td>{{ a.discharge_date }}</td><td><a class="btn sm gray" href="/admissions/{{ a.id }}/summary">Summary</a></td></tr>
+{% else %}<tr><td colspan="5" class="muted">None.</td></tr>{% endfor %}</table></div>
+{% endblock %}

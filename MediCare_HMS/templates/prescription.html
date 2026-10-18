@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block heading %}Prescription{% endblock %}{% block content %}
+<div class="card" style="max-width:800px"><div style="display:flex;justify-content:space-between;border-bottom:2px solid #0f766e;padding-bottom:8px">
+<div><h2 style="color:#0f766e;margin:0">MediCare Hospital</h2><small>12, Main Road, Tambaram, Chennai · 044-0000-0000</small></div>
+<div style="text-align:right"><b>{{ c.dname }}</b><br><small>{{ c.qualification }} · {{ c.department }}</small></div></div>
+<p><b>Patient:</b> {{ p.name }} ({{ p.uhid }}) · {{ p.age }}y {{ p.gender }} · <b>Date:</b> {{ c.cdate }}<br><b>Allergies:</b> {{ p.allergies }}</p>
+<p><b>Symptoms:</b> {{ c.symptoms }}<br><b>Diagnosis:</b> {{ c.diagnosis }}</p>
+<h3>Rx</h3><table><tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Days</th><th>Qty</th></tr>
+{% for r in rx %}<tr><td>{{ loop.index }}</td><td>{{ r.name }}</td><td>{{ r.dosage }}</td><td>{{ r.days }}</td><td>{{ r.qty }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No medicines.</td></tr>{% endfor %}</table>
+{% if labs %}<p><b>Lab tests advised:</b> {% for l in labs %}{{ l.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+<p><b>Advice:</b> {{ c.advice or '-' }}</p><p style="text-align:right;margin-top:40px">Doctor's signature: ____________</p>
+<button class="btn noprint" onclick="window.print()">Print</button></div>
+{% endblock %}

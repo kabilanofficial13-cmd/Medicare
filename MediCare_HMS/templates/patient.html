@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}Patient Record{% endblock %}{% block content %}
+<div class="card"><h2>{{ p.name }} <small class="muted">{{ p.uhid }}</small></h2>
+<p>{{ p.age }} yrs · {{ p.gender }} · Blood group <b>{{ p.blood_group }}</b> · Phone {{ p.phone }} · Email {{ p.email or '-' }} · Emergency contact {{ p.emergency_contact or '-' }}<br>Address: {{ p.address or '-' }}<br>
+Allergies: {% if p.allergies and p.allergies|lower != 'none' %}<span class="badge High">{{ p.allergies }}</span>{% else %}None known{% endif %}</p>
+{% if session.role in ['admin','receptionist'] %}<form method="post" action="/patients/{{ p.id }}/email" style="display:flex;gap:8px;margin:8px 0;max-width:460px"><input type="email" name="email" value="{{ p.email or '' }}" placeholder="Update patient email"><button class="btn sm gray">Save email</button></form>{% endif %}
+<a class="btn sm" href="/appointments?pid={{ p.id }}">Book appointment</a>
+{% if session.role in ['admin','receptionist'] %}<a class="btn sm gray" href="/billing/new/{{ p.id }}">Open bill</a>{% endif %}</div>
+<div class="card ai"><h3>AI Risk Assessment: {{ badge(level) }}</h3>
+{% for a in alerts %}<p>⚠ {{ a }}</p>{% endfor %}{% for t in trend %}<p>📈 {{ t }}</p>{% endfor %}
+<h3 style="margin-top:12px">AI Clinical Summary</h3><p>{{ summary }}</p>
+<small class="muted">AI output is for decision support only and does not replace a doctor's judgement.</small></div>
+<div class="card"><h3>Vitals</h3>
+<form method="post" action="/patients/{{ p.id }}/vitals"><div class="grid">
+<input name="bp_sys" type="number" placeholder="BP systolic"><input name="bp_dia" type="number" placeholder="BP diastolic">
+<input name="sugar" type="number" placeholder="Sugar mg/dL"><input name="heart_rate" type="number" placeholder="Heart rate">
+<input name="spo2" type="number" placeholder="SpO2 %"><input name="temp" type="number" step="0.1" placeholder="Temp °C"></div>
+<button class="btn sm">Record vitals</button></form>
+<table style="margin-top:12px"><tr><th>When</th><th>BP</th><th>Sugar</th><th>HR</th><th>SpO2</th><th>Temp</th><th>By</th></tr>
+{% for v in vit %}<tr><td>{{ v.recorded_at }}</td><td>{{ v.bp_sys or '-' }}/{{ v.bp_dia or '-' }}</td><td>{{ v.sugar or '-' }}</td><td>{{ v.heart_rate or '-' }}</td><td>{{ v.spo2 or '-' }}</td><td>{{ v.temp or '-' }}</td><td>{{ v.recorded_by }}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No readings.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Consultations</h3><table><tr><th>Date</th><th>Doctor</th><th>Diagnosis</th><th></th></tr>
+{% for c in consults %}<tr><td>{{ c.cdate }}</td><td>{{ c.dname }}</td><td>{{ c.diagnosis }}</td><td><a class="btn sm" href="/prescription/{{ c.id }}">Prescription</a></td></tr>
+{% else %}<tr><td colspan="4" class="muted">None yet.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Lab Results</h3>
+{% if session.role in ['doctor','admin'] %}<form method="post" action="/patients/{{ p.id }}/lab_order" style="display:flex;gap:8px;margin-bottom:10px">
+<select name="test_id">{% for t in tests %}<option value="{{ t.id }}">{{ t.name }} (₹{{ t.price|int }})</option>{% endfor %}</select><button class="btn sm" style="white-space:nowrap">Order test</button></form>{% endif %}
+<table><tr><th>Test</th><th>Result</th><th>Normal range</th><th>Flag</th><th>AI interpretation</th></tr>
+{% for l in labs %}<tr><td>{{ l.name }}</td><td>{% if l.result is not none %}{{ l.result }} {{ l.unit }}{% else %}<span class="muted">pending</span>{% endif %}</td><td>{{ l.low }} - {{ l.high }}</td>
+<td>{% if l.flag %}{{ badge(l.flag) }}{% endif %}</td><td>{{ l.note }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No lab tests.</td></tr>{% endfor %}</table></div>
+<div class="two"><div class="card"><h3>Admissions</h3><table>{% for a in adms %}<tr><td>{{ a.admit_date }} → {{ a.discharge_date or 'now' }}<br><small class="muted">{{ a.ward }} {{ a.bed_no }} · {{ a.dname }}</small></td><td>{{ badge(a.status) }}</td></tr>
+{% else %}<tr><td class="muted">None</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Appointments</h3><table>{% for a in appts %}<tr><td>{{ a.adate }} {{ a.atime }}</td><td>{{ a.dname }}</td><td>{{ badge(a.status) }}</td></tr>
+{% else %}<tr><td class="muted">None</td></tr>{% endfor %}</table></div></div>
+<div class="card"><h3>Bills</h3><table>{% for b in bills %}<tr><td>#{{ b.id }} · {{ b.bdate }}</td><td>{{ b.total|inr }}</td><td>{{ badge(b.status) }}</td>
+{% if session.role in ['admin','receptionist'] %}<td><a class="btn sm" href="/billing/{{ b.id }}">Open</a></td>{% endif %}</tr>{% else %}<tr><td class="muted">None</td></tr>{% endfor %}</table></div>
+{% endblock %}

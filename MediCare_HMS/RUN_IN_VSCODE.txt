@@ -1,0 +1,22 @@
+HOW TO RUN IN VISUAL STUDIO CODE (3 steps)
+
+1) Unzip, then in VS Code: File > Open Folder > select the MediCare_HMS folder.
+   (Install the "Python" extension if VS Code asks.)
+
+2) Open the Terminal (Ctrl + `) and run once:
+       python -m pip install -r requirements.txt
+
+3) Press F5  (or click Run > Start Debugging > "Run MediCare HMS").
+   The browser opens at http://127.0.0.1:5000
+
+   Or just double-click run.bat instead.
+
+LOGINS: admin/admin123, reception/recep123, doctor/doctor123, pharmacy/pharma123, lab/lab123
+
+EMAIL: already set up in the ".env" file (Gmail App Password).
+  - Pay a bill -> the PDF receipt is emailed automatically if the patient has an email.
+  - Test: open a paid invoice -> type your email -> "Send PDF by Email".
+  - PRIVACY: do not share this folder/zip or upload it to GitHub - .env holds your email password.
+    If you ever share the project, delete the .env file first.
+  - If sending fails with "Gmail rejected the login", create a new App Password at
+    https://myaccount.google.com/apppasswords and paste it in .env.

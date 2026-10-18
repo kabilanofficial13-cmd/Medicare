@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% from "_macros.html" import bars, vbars %}{% block heading %}Reports & Analytics{% endblock %}{% block content %}
+<div class="card noprint"><form style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+<div><label>From</label><input type="date" name="from" value="{{ start }}"></div><div><label>To</label><input type="date" name="to" value="{{ end }}"></div>
+<button class="btn">Apply</button>
+<a class="btn sm gray" href="/reports?range=7">7 days</a><a class="btn sm gray" href="/reports?range=30">30 days</a><a class="btn sm gray" href="/reports?range=90">90 days</a><a class="btn sm gray" href="/reports?range=365">1 year</a>
+<span style="flex:1"></span><a class="btn gray" href="/reports.csv?from={{ start }}&to={{ end }}">⬇ Revenue CSV</a><button type="button" class="btn gray" onclick="window.print()">🖨 Print</button></form></div>
+<p class="muted">Showing <b>{{ start }}</b> to <b>{{ end }}</b> ({{ days }} day{{ 's' if days != 1 }}).</p>
+
+<div class="stats">
+<div class="stat"><span>Revenue collected</span><div>{{ total|inr }}</div><small class="muted">{% if change is not none %}{{ '▲' if change >= 0 else '▼' }} {{ change|abs }}% vs previous {{ days }} days{% else %}No earlier period to compare{% endif %}</small></div>
+<div class="stat"><span>Paid bills</span><div>{{ bills_n }}</div></div>
+<div class="stat"><span>Average bill</span><div>{{ avg_bill|inr }}</div></div>
+<div class="stat"><span>Discounts given</span><div>{{ discounts|inr }}</div></div>
+<div class="stat"><span>Pending dues (all time)</span><div>{{ dues|inr }}</div></div>
+<div class="stat"><span>New patients</span><div>{{ new_patients }}</div></div>
+<div class="stat"><span>Appointments</span><div>{{ appts_n }}</div><small class="muted">{{ appts_done|int }} completed · {{ appts_cancel|int }} cancelled</small></div>
+<div class="stat"><span>New admissions</span><div>{{ admissions_n }}</div></div>
+</div>
+
+<div class="two">
+<div class="card"><h3>{{ trend_label }} (₹)</h3>{{ vbars(trend) }}</div>
+<div class="card"><h3>Revenue by category (₹)</h3>{{ bars(by_cat) }}</div>
+<div class="card"><h3>Payment mode (₹)</h3>{{ bars(by_mode) }}</div>
+<div class="card"><h3>Appointments by department</h3>{{ bars(by_dept) }}</div>
+<div class="card"><h3>Lab tests ordered</h3>{{ bars(top_labs) }}</div>
+<div class="card"><h3>Lab results (Normal / abnormal)</h3>{{ bars(lab_flags) }}</div>
+<div class="card"><h3>Patients by age group</h3>{{ bars(age_groups) }}</div>
+<div class="card"><h3>Patients by gender</h3>{{ bars(gender) }}</div>
+<div class="card"><h3>Occupied beds by ward</h3>{{ bars(occupancy) }}</div>
+<div class="card"><h3>Pharmacy snapshot</h3><p>Medicines: <b>{{ stock.n }}</b> · Stock value: <b>{{ stock.retail|inr }}</b></p>
+<p><span class="badge High">{{ stock.low|int }} low stock</span> <span class="badge Mild">{{ stock.soon|int }} expiring ≤ 60 days</span> <span class="badge High">{{ stock.expired|int }} expired</span></p>
+<p class="muted">Bill emails: {{ email_sent }} delivered · {{ email_failed }} failed</p><a class="btn sm" href="/pharmacy">Open pharmacy</a></div></div>
+
+<div class="two">
+<div class="card"><h3>Doctor performance</h3><table><tr><th>Doctor</th><th>Dept</th><th>Appts</th><th>Done</th><th>Cancelled</th></tr>
+{% for d in doctors %}<tr><td>{{ d.name }}</td><td>{{ d.department }}</td><td>{{ d.total }}</td><td>{{ d.done }}</td><td>{{ d.cancelled }}</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Top medicines sold</h3><table><tr><th>Medicine</th><th>Units</th><th>Amount</th></tr>
+{% for m in top_meds %}<tr><td>{{ m.name }}</td><td>{{ m.units }}</td><td>{{ m.amount|inr }}</td></tr>{% else %}<tr><td colspan="3" class="muted">No pharmacy sales in this period.</td></tr>{% endfor %}</table>
+<h3 style="margin-top:14px">Most frequent patients</h3><table><tr><th>Patient</th><th>Visits</th></tr>{% for p in top_patients %}<tr><td>{{ p.name }} <small class="muted">{{ p.uhid }}</small></td><td>{{ p.visits }}</td></tr>{% else %}<tr><td colspan="2" class="muted">No visits in this period.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Low stock medicines</h3><table><tr><th>Medicine</th><th>Stock</th><th>Reorder at</th></tr>
+{% for m in low_meds %}<tr><td>{{ m.name }}</td><td><span class="badge High">{{ m.stock }}</span></td><td>{{ m.reorder_level }}</td></tr>{% else %}<tr><td colspan="3" class="muted">All stock levels are fine.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Expired / expiring within 60 days</h3><table><tr><th>Medicine</th><th>Stock</th><th>Expiry</th></tr>
+{% for m in expiring %}<tr><td>{{ m.name }}</td><td>{{ m.stock }}</td><td>{{ m.expiry }}</td></tr>{% else %}<tr><td colspan="3" class="muted">Nothing expiring soon.</td></tr>{% endfor %}</table></div></div>
+
+<div class="card"><h3>Outstanding bills (oldest first)</h3><table><tr><th>Bill</th><th>Patient</th><th>Created</th><th>Age</th><th>Amount due</th><th>Contact</th><th class="noprint"></th></tr>
+{% for p in pending %}<tr><td>#{{ p.id }}</td><td>{{ p.pname }} <small class="muted">{{ p.uhid }}</small></td><td>{{ p.bdate }}</td><td>{% if p.age > 7 %}<span class="badge High">{{ p.age }} d</span>{% else %}{{ p.age }} d{% endif %}</td><td><b>{{ p.amount|inr }}</b></td><td>{{ p.phone or '-' }}<br><small class="muted">{{ p.email or '' }}</small></td><td class="noprint"><a class="btn sm" href="/billing/{{ p.id }}">Open</a></td></tr>
+{% else %}<tr><td colspan="7" class="muted">No outstanding bills. 🎉</td></tr>{% endfor %}</table></div>
+{% endblock %}

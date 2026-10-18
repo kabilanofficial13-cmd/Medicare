@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block heading %}Audit Log{% endblock %}{% block content %}
+<div class="card"><h2>Recent activity</h2><table><tr><th>Time</th><th>User</th><th>Action</th></tr>
+{% for r in rows %}<tr><td>{{ r.ts }}</td><td>{{ r.user }}</td><td>{{ r.action }}</td></tr>{% endfor %}</table></div>
+{% endblock %}

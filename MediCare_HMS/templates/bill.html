@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}Bill #{{ b.id }}{% endblock %}{% block content %}
+<div class="card"><h2>Bill #{{ b.id }} - {{ b.pname }} <small class="muted">{{ b.uhid }}</small> {{ badge(b.status) }}</h2>
+<table><tr><th>Description</th><th>Category</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+{% for i in items %}<tr><td>{{ i.description }}</td><td>{{ i.category }}</td><td>{{ i.qty }}</td><td>{{ i.price|inr }}</td><td>{{ (i.qty*i.price)|inr }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No items yet.</td></tr>{% endfor %}
+<tr><th colspan="4" style="text-align:right">Gross</th><th>{{ gross|inr }}</th></tr>
+<tr><th colspan="4" style="text-align:right">Discount</th><th>{{ disc|inr }}</th></tr>
+<tr><th colspan="4" style="text-align:right">Net payable</th><th>{{ net|inr }}</th></tr></table></div>
+<div class="card">
+<h3>📱 Send Bill via WhatsApp</h3>
+<p class="muted">Enter the customer's WhatsApp number with country code if needed. WhatsApp will open with the bill summary ready to send.</p>
+<div class="grid">
+<label>Customer WhatsApp number
+<input id="waPhone" type="tel" value="{{ b.phone or '' }}" placeholder="e.g. 9876543210" autocomplete="tel">
+</label>
+<button class="btn" type="button" onclick="sendBillWhatsApp()">Open WhatsApp</button>
+</div>
+</div>
+<div class="card" style="margin-top:12px">
+  <h3>✉️ Send Bill PDF by Email</h3>
+  <p class="muted">Enter any email address to send this bill as a PDF attachment. The email is verified before sending.</p>
+  <form method="post" action="/billing/{{ b.id }}/send-pdf"
+        onsubmit="return validateSendPdfForm(this)">
+    <div class="grid" style="align-items:flex-end;gap:10px">
+      <label>Recipient email address
+        <input type="email" name="email" id="sendPdfEmail"
+               value="{{ b.email or '' }}"
+               placeholder="e.g. patient@example.com"
+               autocomplete="email" required>
+      </label>
+      <button class="btn" type="submit" id="sendPdfBtn">Send PDF</button>
+    </div>
+    <p id="sendPdfError" style="color:#dc2626;margin-top:6px;display:none"></p>
+  </form>
+</div>
+<script>
+function validateSendPdfForm(form) {
+  var email = document.getElementById('sendPdfEmail').value.trim();
+  var err   = document.getElementById('sendPdfError');
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) {
+    err.textContent = 'Please enter an email address.';
+    err.style.display = 'block';
+    return false;
+  }
+  if (!emailRe.test(email)) {
+    err.textContent = 'That doesn\'t look like a valid email. Try: name@domain.com';
+    err.style.display = 'block';
+    return false;
+  }
+  err.style.display = 'none';
+  var btn = document.getElementById('sendPdfBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  return true;
+}
+</script>
+<textarea id="waMessage" hidden>Dear {{ b.pname }},
+
+MediCare Hospital - Bill #{{ b.id }}
+Patient ID: {{ b.uhid }}
+Date: {{ b.bdate }}
+
+{% for i in items %}{{ i.description }} x {{ i.qty }} = ₹{{ '%.2f'|format(i.qty*i.price) }}
+{% endfor %}
+Gross: ₹{{ '%.2f'|format(gross) }}
+Discount: ₹{{ '%.2f'|format(disc) }}
+Total payable: ₹{{ '%.2f'|format(net) }}
+Status: {{ b.status }}
+
+Thank you for choosing MediCare Hospital.</textarea>
+<script>
+function sendBillWhatsApp() {
+  const field = document.getElementById('waPhone');
+  let phone = (field.value || '').replace(/\\D/g, '');
+  if (phone.length === 10) phone = '91' + phone;
+  if (phone.length < 11 || phone.length > 15) {
+    alert('Please enter a valid WhatsApp number, including country code if required.');
+    field.focus();
+    return;
+  }
+  const message = document.getElementById('waMessage').value.trim();
+  window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(message), '_blank');
+}
+</script>
+{% if b.status=='Pending' %}
+<div class="two"><div class="card"><h3>Add manual charge</h3><form method="post" action="/billing/{{ b.id }}/item"><div class="grid">
+<input name="description" placeholder="Description" required><input name="qty" type="number" value="1"><input name="price" type="number" step="0.01" placeholder="Rate ₹" required></div><button class="btn sm">Add</button></form></div>
+<div class="card"><h3>Collect payment</h3><p class="muted">For UPI, open the QR payment screen and verify the transaction in the UPI app before confirming.</p>
+<a class="btn" href="/billing/{{ b.id }}/payment">▦ Scan &amp; Pay by UPI</a>
+<form method="post" action="/billing/{{ b.id }}/pay" style="margin-top:12px"><div class="grid">
+<select name="mode"><option>Cash</option><option>Card</option><option>Insurance</option></select><input name="discount" type="number" step="0.01" min="0" placeholder="Discount ₹ (optional)"></div>
+<div style="margin:12px 0;padding:12px;border-radius:12px;background:var(--soft)"><label>✉️ Patient email (PDF receipt is sent automatically after payment)
+<input type="email" name="email" value="{{ b.email or '' }}" placeholder="patient@example.com"></label>
+<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" name="send_email" value="1" checked style="width:auto"><span>Email PDF receipt to patient</span></label><input type="hidden" name="send_email" value="0"></div>
+<button class="btn gray">Confirm Cash / Card Payment</button></form></div></div>
+{% else %}<a class="btn" href="/billing/{{ b.id }}/invoice">View / Print Invoice</a>{% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block heading %}Staff & Users{% endblock %}{% block content %}
+<div class="card"><h2>Create User</h2><form method="post"><div class="grid">
+<input name="full_name" placeholder="Full name" required><input name="username" placeholder="Username" required><input name="password" placeholder="Password" required>
+<select name="role"><option>receptionist</option><option>doctor</option><option>pharmacist</option><option>lab</option><option>admin</option></select>
+<select name="doctor_id"><option value="">Link to doctor (for doctor role)</option>{% for d in doctors %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}</select></div><button class="btn">Create</button></form></div>
+<div class="card"><h2>All Users</h2><table><tr><th>Name</th><th>Username</th><th>Role</th><th></th></tr>
+{% for u in users %}<tr><td>{{ u.full_name }}</td><td>{{ u.username }}</td><td>{{ u.role }}</td><td>{% if u.username != session.user %}<form method="post" action="/staff/{{ u.id }}/delete" style="display:inline"><button class="btn sm red">Delete</button></form>{% endif %}</td></tr>{% endfor %}</table></div>
+{% endblock %}

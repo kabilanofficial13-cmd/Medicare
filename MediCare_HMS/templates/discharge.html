@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block heading %}Discharge Summary{% endblock %}{% block content %}
+<div class="card" style="max-width:800px"><h2 style="color:#0f766e">MediCare Hospital - Discharge Summary</h2>
+<p><b>Patient:</b> {{ p.name }} ({{ p.uhid }}) · {{ p.age }}y {{ p.gender }} · Blood group {{ p.blood_group }}<br><b>Ward / Bed:</b> {{ a.ward }} / {{ a.bed_no }} · <b>Doctor:</b> {{ a.dname }}<br>
+<b>Admitted:</b> {{ a.admit_date }} · <b>Discharged:</b> {{ a.discharge_date or 'Still admitted' }}</p>
+<p><b>Reason for admission:</b> {{ a.reason }}</p><p><b>Summary / advice on discharge:</b> {{ a.summary or '-' }}</p>
+<button class="btn noprint" onclick="window.print()">Print</button> <a class="btn gray noprint" href="/admissions">Back</a></div>
+{% endblock %}

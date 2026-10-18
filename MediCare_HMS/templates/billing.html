@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}{% block heading %}Billing{% endblock %}{% block content %}
+<div class="stats"><div class="stat"><span>Total collected</span><div>{{ revenue|inr }}</div></div><div class="stat"><span>Pending dues</span><div>{{ dues|inr }}</div></div></div>
+<div class="card"><h2>Bills</h2><p class="muted">Bills fill automatically: consultation fee, lab tests, dispensed medicines and bed charges.</p>
+<table><tr><th>#</th><th>Patient</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr>
+{% for b in bills %}<tr><td>{{ b.id }}</td><td>{{ b.pname }}<br><small class="muted">{{ b.uhid }}</small></td><td>{{ b.bdate }}</td><td>{{ b.total|inr }}</td><td>{{ badge(b.status) }}</td>
+<td><a class="btn sm" href="/billing/{{ b.id }}">{{ 'Collect payment' if b.status=='Pending' else 'View' }}</a></td></tr>{% endfor %}</table></div>
+{% endblock %}

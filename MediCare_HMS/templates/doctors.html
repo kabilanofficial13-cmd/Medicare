@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block heading %}Doctors & Departments{% endblock %}{% block content %}
+{% if session.role=='admin' %}<div class="card"><h2>Add Doctor</h2><form method="post"><div class="grid">
+<div><label>Name</label><input name="name" required></div><div><label>Department</label><select name="department">{% for d in departments %}<option>{{ d }}</option>{% endfor %}</select></div>
+<div><label>Qualification</label><input name="qualification"></div><div><label>Phone</label><input name="phone"></div>
+<div><label>Consultation fee ₹</label><input name="fee" type="number" value="500"></div></div><button class="btn">Add Doctor</button></form></div>{% endif %}
+<div class="card"><h2>Our Doctors</h2><table><tr><th>Name</th><th>Department</th><th>Qualification</th><th>Phone</th><th>Fee</th><th>Today</th><th></th></tr>
+{% for d in doctors %}<tr><td>{{ d.name }}</td><td>{{ d.department }}</td><td>{{ d.qualification }}</td><td>{{ d.phone }}</td><td>{{ d.fee|inr }}</td><td>{{ d.today }} appts</td>
+<td>{% if session.role=='admin' %}<form method="post" action="/doctors/{{ d.id }}/delete" style="display:inline" onsubmit="return confirm('Delete doctor?')"><button class="btn sm red">Delete</button></form>{% endif %}</td></tr>{% endfor %}</table></div>
+{% endblock %}

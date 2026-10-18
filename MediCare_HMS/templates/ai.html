@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block heading %}AI Assistant{% endblock %}{% block content %}
+<div class="hero"><div><h2>Speak or type. The AI helps.</h2><p>Symptom triage, drug safety and an FAQ chatbot. Use the 🎤 buttons and pick English or தமிழ் at the top right.</p>
+<label class="switch"><input type="checkbox" id="tts" checked> 🔊 Read answers aloud</label></div><img src="/static/hero.svg" alt=""></div>
+<div class="two">
+<div class="card ai"><h2>Symptom Checker &amp; Triage</h2>
+<textarea data-mic id="sym" rows="3" placeholder="e.g. severe headache and dizziness since 2 days   (or speak)"></textarea><br>
+<button class="btn" onclick="check()">Analyse symptoms</button><div id="res"></div></div>
+<div class="card ai"><h2>Drug Interaction Checker</h2>
+<input id="drugs" placeholder="Medicines, comma separated: aspirin, warfarin"><br><br>
+<input id="alg" placeholder="Patient allergies (optional): penicillin"><br><br>
+<button class="btn" onclick="inter()">Check safety</button><div id="ires" style="margin-top:12px"></div></div></div>
+<div class="card ai"><h2>Hospital FAQ Chatbot</h2>
+<div class="chips"><button onclick="ask('What are the OPD timings?')">OPD timings</button><button onclick="ask('Which departments do you have?')">Departments</button><button onclick="ask('Visiting hours')">Visiting hours</button><button onclick="ask('Where is the pharmacy?')">Pharmacy</button><button onclick="ask('How to pay the bill?')">Billing</button></div>
+<div class="chat" id="chat"><p>🤖 Hi! Ask me about timings, departments, appointments, lab, pharmacy, ICU or billing.</p></div>
+<div style="display:flex;gap:8px"><input data-mic id="msg" placeholder="Type or speak your question" onkeydown="if(event.key==='Enter')send()"><button class="btn" onclick="send()">Send</button></div></div>
+<small class="muted">AI features are decision-support tools and do not replace a doctor. Voice works in Chrome / Edge with internet.</small>
+<script>
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+async function check(){const d=await post('/api/symptoms',{text:sym.value});
+ res.innerHTML='<div class="resbox"><div class="dept">'+d.department+'</div><span class="badge '+d.urgency+'">'+d.urgency+' urgency</span><p>'+d.advice+'</p></div>';
+ if(tts.checked)speak(d.department+' department. '+d.urgency+' urgency. '+d.advice)}
+async function inter(){const d=await post('/api/interactions',{drugs:drugs.value,allergies:alg.value});
+ ires.innerHTML=d.warnings.length?d.warnings.map(x=>'<div class="ins '+x.level+'"><b>'+x.level+'</b>: '+x.msg+'</div>').join(''):'<div class="ins LOW">No known interactions found.</div>';
+ if(tts.checked)speak(d.warnings.length?d.warnings.length+' warning found. '+d.warnings[0].msg:'No known interactions found.')}
+async function send(){const m=msg.value.trim();if(!m)return;chat.innerHTML+='<p class="me">'+m.replace(/</g,'&lt;')+'</p>';msg.value='';
+ const d=await post('/api/chat',{message:m});chat.innerHTML+='<p>🤖 '+d.reply+'</p>';chat.scrollTop=chat.scrollHeight;if(tts.checked)speak(d.reply)}
+function ask(t){msg.value=t;send()}
+msg.addEventListener('voicedone',send);
+</script>
+{% endblock %}
