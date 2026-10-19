@@ -68,14 +68,38 @@ def new_patient(db, name, age, gender, bg, phone, address, ec, allergies, email=
     db.commit()
     return pid
 
+# def init_db():
+#     db = connect()
+#     db.executescript(SCHEMA)
+#     migrate(db)
+#     if not db.execute("SELECT 1 FROM users").fetchone():
+#         seed(db)
+#     db.commit()
+#     db.close()
+
 def init_db():
+    """Initialize database schema and seed demo data if needed."""
     db = connect()
-    db.executescript(SCHEMA)
-    migrate(db)
-    if not db.execute("SELECT 1 FROM users").fetchone():
-        seed(db)
-    db.commit()
-    db.close()
+
+    try:
+        db.executescript(SCHEMA)
+        migrate(db)
+
+        user_exists = db.execute(
+            "SELECT 1 FROM users LIMIT 1"
+        ).fetchone()
+
+        if user_exists is None:
+            seed(db)
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
 
 def seed(db):
     today = date.today()
