@@ -1197,8 +1197,9 @@ def api_interactions():
         names = [x.strip() for x in (j.get("drugs") or "").split(",") if x.strip()]
     return jsonify({"warnings": ai.check_interactions(names, allergies, age)})
 
+database.init_db() #intialize the database for local and render deployment.
 if __name__ == "__main__":
-    database.init_db()
+    # database.init_db()
     print("EMAIL:", "ready, sending as " + smtp_settings()["user"] if email_configured() else "NOT READY - " + email_diagnosis())
     threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
     app.run(debug=False)
